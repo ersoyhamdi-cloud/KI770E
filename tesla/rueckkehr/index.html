@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="de">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>K.I.T.T. — Anmeldung bei Tesla</title>
+<!--
+  Rueckkehr-Seite der Tesla-Anmeldung (22.08.2026).
+
+  🔴 Diese Seite schickt NICHTS irgendwohin. Sie liest den Anmeldecode aus
+  der Adresszeile des Browsers und zeigt ihn an, mehr nicht. Kein fetch,
+  kein Bild von fremden Servern, keine Auswertung. Der Code bleibt in
+  deinem Browser, bis du ihn selbst in KITT eintraegst.
+
+  Warum ueberhaupt: Tesla schickt den Code an genau die Adresse, die im
+  Entwicklerkonto hinterlegt ist. Die liegt auf dieser Domain, nicht auf
+  dem M1 — der bleibt privat und aus dem offenen Netz heraus.
+-->
+<style>
+  :root { color-scheme: dark; }
+  body { font-family: -apple-system, Helvetica, Arial, sans-serif;
+         background: #0b0b0c; color: #c8c8cc; margin: 0; padding: 6vh 5vw;
+         line-height: 1.5; }
+  main { max-width: 40rem; margin: 0 auto; }
+  h1 { font-size: 1.25rem; letter-spacing: .14em; color: #e02a2a; margin: 0 0 1.5rem; }
+  h2 { font-size: .8rem; letter-spacing: .1em; text-transform: uppercase;
+       color: #6e6e74; margin: 2rem 0 .5rem; font-weight: 600; }
+  code, #code { font-family: ui-monospace, Menlo, monospace; }
+  #code { display: block; width: 100%; box-sizing: border-box;
+          background: #141416; color: #6dff5e; border: 1px solid #2a2a2e;
+          border-radius: 6px; padding: .9rem; font-size: .85rem;
+          word-break: break-all; white-space: pre-wrap; min-height: 3rem; }
+  button { margin-top: .8rem; background: #e02a2a; color: #fff; border: 0;
+           border-radius: 6px; padding: .7rem 1.4rem; font-size: .9rem;
+           font-weight: 600; cursor: pointer; }
+  button:disabled { background: #2a2a2e; color: #6e6e74; cursor: default; }
+  .hinweis { font-size: .82rem; color: #6e6e74; margin-top: 1.6rem; }
+  .warnung { color: #e0a02a; }
+  .fehler { color: #e02a2a; }
+</style>
+
+<main>
+  <h1>K.I.T.T. &middot; Anmeldung bei Tesla</h1>
+
+  <h2>Anmeldecode</h2>
+  <div id="code">wird gelesen …</div>
+  <button id="kopieren" disabled>Kopieren</button>
+
+  <p class="hinweis" id="lage"></p>
+
+  <p class="hinweis">
+    Diese Seite sendet den Code <strong>nirgendwohin</strong>. Sie liest ihn
+    nur aus der Adresszeile. Trage ihn in K.I.T.T. ein, dann holt der Server
+    zu Hause den Dauer&shy;zugang damit ab.
+  </p>
+  <p class="hinweis warnung">
+    Der Code gilt nur wenige Minuten. Ist er abgelaufen, die Anmeldung
+    einfach noch einmal starten.
+  </p>
+</main>
+
+<script>
+(function () {
+  var p = new URLSearchParams(window.location.search);
+  var code = p.get("code");
+  var fehler = p.get("error");
+  var feld = document.getElementById("code");
+  var knopf = document.getElementById("kopieren");
+  var lage = document.getElementById("lage");
+
+  if (fehler) {
+    feld.textContent = fehler + (p.get("error_description") ? " — " + p.get("error_description") : "");
+    feld.style.color = "#e02a2a";
+    lage.className = "hinweis fehler";
+    lage.textContent = "Tesla hat die Anmeldung abgelehnt.";
+    return;
+  }
+  if (!code) {
+    feld.textContent = "kein Code in der Adresszeile";
+    feld.style.color = "#6e6e74";
+    lage.textContent = "Diese Seite oeffnet sich normalerweise von selbst am Ende der Tesla-Anmeldung.";
+    return;
+  }
+
+  feld.textContent = code;
+  knopf.disabled = false;
+  var zustand = p.get("state");
+  lage.textContent = "Laenge " + code.length + " Zeichen"
+                   + (zustand ? " · state: " + zustand : "");
+
+  knopf.addEventListener("click", function () {
+    function fertig() { knopf.textContent = "Kopiert"; setTimeout(function () {
+      knopf.textContent = "Kopieren"; }, 2000); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(fertig, waehlen);
+    } else { waehlen(); }
+    function waehlen() {
+      var b = document.createRange();
+      b.selectNodeContents(feld);
+      var s = window.getSelection();
+      s.removeAllRanges(); s.addRange(b);
+      knopf.textContent = "markiert — jetzt kopieren";
+    }
+  });
+})();
+</script>
